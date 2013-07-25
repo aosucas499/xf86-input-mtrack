@@ -78,6 +78,9 @@ void mconfig_defaults(struct MConfig* cfg)
 	cfg->drag_enable = DEFAULT_DRAG_ENABLE;
 	cfg->drag_timeout = DEFAULT_DRAG_TIMEOUT;
 	cfg->sensitivity = DEFAULT_SENSITIVITY;
+
+	// configure pointer mode
+	cfg->absolute_mode = DEFAULT_ABSOLUTE;
 }
 
 void mconfig_init(struct MConfig* cfg,
@@ -180,5 +183,7 @@ void mconfig_configure(struct MConfig* cfg,
 	cfg->axis_x_invert = xf86SetBoolOption(opts, "AxisXInvert", DEFAULT_AXIS_X_INVERT);
 	cfg->axis_y_invert = xf86SetBoolOption(opts, "AxisYInvert", DEFAULT_AXIS_Y_INVERT);
 	cfg->sensitivity = MAXVAL(xf86SetRealOption(opts, "Sensitivity", DEFAULT_SENSITIVITY), 0);
+
+	cfg->absolute_mode = xf86SetBoolOption(opts, "Absolute", DEFAULT_ABSOLUTE);
 }
 

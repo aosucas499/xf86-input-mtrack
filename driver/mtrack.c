@@ -303,6 +303,9 @@ static int preinit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     xf86ProcessCommonOptions(pInfo, pInfo->options);
     mconfig_configure(&mt->cfg, pInfo->options);
 
+	/* adjust type name for absolute devices */
+	if (mt->cfg.absolute_mode)
+		pInfo->type_name = XI_TOUCHSCREEN;
 	return Success;
 }
 #else
@@ -331,6 +334,10 @@ static InputInfoPtr preinit(InputDriverPtr drv, IDevPtr dev, int flags)
 	mconfig_configure(&mt->cfg, local->options);
 
 	local->flags |= XI86_CONFIGURED;
+
+	/* adjust type name for absolute devices */
+	if (mt->cfg.absolute_mode)
+		pInfo->type_name = XI_TOUCHSCREEN;
  error:
 	return local;
 }
