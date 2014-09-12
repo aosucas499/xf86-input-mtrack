@@ -275,6 +275,17 @@ static void buttons_update(struct Gestures* gs,
 	}
 }
 
+/* retrieve the button number from a number of tap fingers */
+static inline int tap_buttonnr(const struct MConfig *cfg, int fingers)
+{
+	const int buttons[1+4] = { 0, cfg->tap_1touch, cfg->tap_2touch,
+		cfg->tap_3touch, cfg->tap_4touch, };
+
+	if (fingers > 4)
+		fingers = 4;
+	return buttons[fingers];
+}
+
 static void tapping_update(struct Gestures* gs,
 			const struct MConfig* cfg,
 			struct MTState* ms)
@@ -355,20 +366,12 @@ static void tapping_update(struct Gestures* gs,
 	}
 
 	if ((gs->tap_touching == 0 && gs->tap_released > 0) || gs->tap_released >= released_max) {
+		n = tap_buttonnr(cfg, gs->tap_released) -1;
+
 		foreach_bit(i, ms->touch_used) {
 			if (GETBIT(ms->touch[i].flags, GS_TAP))
 				CLEARBIT(ms->touch[i].flags, GS_TAP);
 		}
-
-		if (gs->tap_released == 1)
-			n = cfg->tap_1touch - 1;
-		else if (gs->tap_released == 2)
-			n = cfg->tap_2touch - 1;
-		else if (gs->tap_released == 3)
-			n = cfg->tap_3touch - 1;
-		else
-			n = cfg->tap_4touch - 1;
-
 		trigger_button_click(gs, n, &tv_tmp);
 		if (cfg->drag_enable && n == 0)
 			trigger_drag_ready(gs, cfg);
