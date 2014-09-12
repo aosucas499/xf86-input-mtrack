@@ -193,8 +193,7 @@ static int device_close(LocalDevicePtr local)
 static void handle_gestures(LocalDevicePtr local,
 			const struct Gestures* gs)
 {
-	const struct MTouch *mt = local->private;
-	static bitmask_t buttons_prev = 0U;
+	struct MTouch *mt = local->private;
 	int i;
 
 	/* Give the HW coordinates to Xserver as absolute coordinates, these coordinates
@@ -204,7 +203,7 @@ static void handle_gestures(LocalDevicePtr local,
 		xf86PostMotionEvent(local->dev, 1, 0, 2, mt->state.touch[0].x, mt->state.touch[0].y);
 
 	for (i = 0; i < 32; i++) {
-		if (GETBIT(gs->buttons, i) == GETBIT(buttons_prev, i))
+		if (GETBIT(gs->buttons, i) == GETBIT(mt->last_buttonstate, i))
 			continue;
 		if (GETBIT(gs->buttons, i)) {
 			xf86PostButtonEvent(local->dev, FALSE, i+1, 1, 0, 0);
@@ -219,10 +218,12 @@ static void handle_gestures(LocalDevicePtr local,
 #endif
 		}
 	}
-	buttons_prev = gs->buttons;
 
 	if (mt->cfg.absolute_mode == FALSE && (gs->move_dx != 0 || gs->move_dy != 0))
 		xf86PostMotionEvent(local->dev, 0, 0, 2, gs->move_dx, gs->move_dy);
+
+	/* save button state */
+	mt->last_buttonstate = gs->buttons;
 }
 
 /* called for each full received packet from the touchpad */
