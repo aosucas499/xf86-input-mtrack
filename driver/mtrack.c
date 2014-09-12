@@ -194,24 +194,13 @@ static void handle_gestures(LocalDevicePtr local,
 			const struct Gestures* gs)
 {
 	struct MTouch *mt = local->private;
+	int btndiff;
 	int i;
 
-	/* Give the HW coordinates to Xserver as absolute coordinates, these coordinates
-	 * are not scaled, this is oke if the touchscreen has the same resolution as the display.
-	 */
-	if(mt->cfg.absolute_mode == TRUE)
-		xf86PostMotionEvent(local->dev, 1, 0, 2, mt->state.touch[0].x, mt->state.touch[0].y);
-
-	for (i = 0; i < 32; i++) {
-		if (GETBIT(gs->buttons, i) == GETBIT(mt->last_buttonstate, i))
-			continue;
-		if (GETBIT(gs->buttons, i)) {
-			xf86PostButtonEvent(local->dev, FALSE, i+1, 1, 0, 0);
-#if DEBUG_DRIVER
-			xf86Msg(X_INFO, "button %d down\n", i+1);
-#endif
-		}
-		else {
+	/* handle button up */
+	btndiff = (gs->buttons ^ mt->last_buttonstate) & ~gs->buttons;
+	for (i = 0; i < 32; ++i) {
+		if (GETBIT(btndiff, i)) {
 			xf86PostButtonEvent(local->dev, FALSE, i+1, 0, 0, 0);
 #if DEBUG_DRIVER
 			xf86Msg(X_INFO, "button %d up\n", i+1);
@@ -219,9 +208,22 @@ static void handle_gestures(LocalDevicePtr local,
 		}
 	}
 
-	if (mt->cfg.absolute_mode == FALSE && (gs->move_dx != 0 || gs->move_dy != 0))
+	if(mt->cfg.absolute_mode == TRUE)
+		xf86PostMotionEvent(local->dev, 1, 0, 2, mt->state.touch[0].x, mt->state.touch[0].y);
+	else
+	if (gs->move_dx != 0 || gs->move_dy != 0)
 		xf86PostMotionEvent(local->dev, 0, 0, 2, gs->move_dx, gs->move_dy);
 
+	/* handle button down */
+	btndiff = (gs->buttons ^ mt->last_buttonstate) & gs->buttons;
+	for (i = 0; i < 32; ++i) {
+		if (GETBIT(btndiff, i)) {
+			xf86PostButtonEvent(local->dev, FALSE, i+1, 1, 0, 0);
+#if DEBUG_DRIVER
+			xf86Msg(X_INFO, "button %d down\n", i+1);
+#endif
+		}
+	}
 	/* save button state */
 	mt->last_buttonstate = gs->buttons;
 }
