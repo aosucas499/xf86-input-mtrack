@@ -19,9 +19,7 @@ mtrack_test_SOURCES = $(SOURCES_COMMON) \
 	$(srcdir)/tools/mtrack-test.c
 mtrack_test_CFLAGS = $(AM_CFLAGS)
 
-AM_CPPFLAGS = -I$(top_srcdir)/include/ \
-	-I/usr/include/xorg \
-	-I/usr/include/pixman-1
+AM_CPPFLAGS = -I$(top_srcdir)/include/
 AM_CFLAGS = $(XORG_CFLAGS)
 
 .PHONY: ChangeLog INSTALL
