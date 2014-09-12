@@ -245,8 +245,8 @@ static void touches_update(struct MTState* ms,
 				CLEARBIT(ms->touch[n].state, MT_BOTTOM_EDGE);
 			
 			MODBIT(ms->touch[n].state, MT_INVALID,
-				GETBIT(ms->touch[n].state, MT_THUMB) && cfg->ignore_thumb ||
-				GETBIT(ms->touch[n].state, MT_PALM) && cfg->ignore_palm ||
+				(GETBIT(ms->touch[n].state, MT_THUMB) && cfg->ignore_thumb) ||
+				(GETBIT(ms->touch[n].state, MT_PALM) && cfg->ignore_palm) ||
 				GETBIT(ms->touch[n].state, MT_BOTTOM_EDGE));
 			
 			disable |= cfg->disable_on_thumb && GETBIT(ms->touch[n].state, MT_THUMB);

@@ -193,7 +193,7 @@ static void buttons_update(struct Gestures* gs,
 	button_prev = hs->button;
 
 	if (down) {
-		int earliest, latest, moving = 0;
+		int earliest, latest;
 		gs->move_type = GS_NONE;
 		timeraddms(&gs->time, cfg->gesture_wait, &gs->move_wait);
 		earliest = -1;
@@ -799,6 +799,7 @@ void gestures_extract(struct MTouch* mt)
 	delayed_update(&mt->gs);
 }
 
+extern int mtdev_empty(struct mtdev *);
 static int gestures_sleep(struct MTouch* mt, const struct timeval* sleep)
 {
 	if (mtdev_empty(&mt->dev)) {
