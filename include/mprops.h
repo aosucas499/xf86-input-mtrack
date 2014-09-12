@@ -52,6 +52,8 @@
 #define MTRACK_PROP_TAP_SETTINGS "Trackpad Tap Settings"
 // int, 3 values - 1 touch button, 2 touch button, 3 touch button, 4 touch button
 #define MTRACK_PROP_TAP_EMULATE "Trackpad Tap Button Emulation"
+// int, 1 values - single finger direct button control
+#define MTRACK_PROP_SINGLE_FINGER "Trackpad Single Finger"
 // int, 2 values - ignore thumb touches, disable trackpad on thumb touches
 #define MTRACK_PROP_THUMB_DETECT "Trackpad Thumb Detection"
 // int, 2 values - size, width to length ratio
@@ -101,6 +103,7 @@ struct MProps {
 	Atom button_emulate_values;
 	Atom tap_settings;
 	Atom tap_emulate;
+	Atom single_finger;
 	Atom thumb_detect;
 	Atom thumb_size;
 	Atom palm_detect;

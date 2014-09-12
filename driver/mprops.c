@@ -123,6 +123,9 @@ void mprops_init(struct MConfig* cfg, InputInfoPtr local) {
 	ivals[3] = cfg->tap_4touch;
 	mprops.tap_emulate = atom_init_integer(local->dev, MTRACK_PROP_TAP_EMULATE, 4, ivals, 8);
 
+	ivals[0] = cfg->single_finger;
+	mprops.single_finger = atom_init_integer(local->dev, MTRACK_PROP_SINGLE_FINGER, 1, ivals, 8);
+
 	ivals[0] = cfg->ignore_thumb;
 	ivals[1] = cfg->disable_on_thumb;
 	mprops.thumb_detect = atom_init_integer(local->dev, MTRACK_PROP_THUMB_DETECT, 2, ivals, 8);
@@ -340,6 +343,19 @@ int mprops_set_property(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop
 #ifdef DEBUG_PROPS
 			xf86Msg(X_INFO, "mtrack: set tap emulation to %d %d %d %d\n",
 				cfg->tap_1touch, cfg->tap_2touch, cfg->tap_3touch, cfg->tap_4touch);
+#endif
+		}
+	}
+	else if (property == mprops.single_finger) {
+		if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
+			return BadMatch;
+
+		ivals8 = (uint8_t*)prop->data;
+		if (!checkonly) {
+			cfg->single_finger = ivals8[0];
+#ifdef DEBUG_PROPS
+			xf86Msg(X_INFO, "mtrack: set single finger to %d \n",
+					cfg->single_finger);
 #endif
 		}
 	}

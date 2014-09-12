@@ -383,7 +383,7 @@ static void tapping_update(struct Gestures* gs,
 		gs->absbtn0 = 0;
 	}
 	timeraddms(&gs->tap_time_down, cfg->tap_timeout/2, &tv_tmp2);
-	if (cfg->absolute_mode && (gs->tap_touching == 1) && !saved_nfingers) {
+	if (cfg->single_finger && (gs->tap_touching == 1) && !saved_nfingers) {
 		/* emulate button events */
 		n = tap_buttonnr(cfg, gs->tap_touching) -1;
 		if (n == 0) {
