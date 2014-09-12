@@ -290,9 +290,10 @@ static void tapping_update(struct Gestures* gs,
 			const struct MConfig* cfg,
 			struct MTState* ms)
 {
-	int i, n, dist, released_max;
+	int i, n, dist, released_max, saved_nfingers;
 	struct timeval tv_tmp;
 	struct timeval epoch;
+	struct timeval tv_tmp2;
 
 	if (cfg->trackpad_disable >= 1)
 		return;
@@ -308,9 +309,13 @@ static void tapping_update(struct Gestures* gs,
 	else
 		return;
 
+	/* save # fingers down */
+	saved_nfingers = gs->tap_touching;
+
 	timerclear(&epoch);
 	timeraddms(&gs->tap_time_down, cfg->tap_timeout, &tv_tmp);
-	if (!timercmp(&gs->tap_time_down, &epoch, ==) && !timercmp(&gs->time, &tv_tmp, <)) {
+	if (!gs->absbtn0 && !timercmp(&gs->tap_time_down, &epoch, ==) && !timercmp(&gs->time, &tv_tmp, <)) {
+		/* reset tap after time */
 		gs->tap_touching = 0;
 		gs->tap_released = 0;
 		timerclear(&gs->tap_time_down);
@@ -345,7 +350,8 @@ static void tapping_update(struct Gestures* gs,
 
 				if (GETBIT(ms->touch[i].flags, GS_TAP)) {
 					dist = dist2(ms->touch[i].total_dx, ms->touch[i].total_dy);
-					if (dist >= SQRVAL(cfg->tap_dist)) {
+					if (!gs->absbtn0 && (dist >= SQRVAL(cfg->tap_dist))) {
+						/* ignore moves for button 0 in absolute mode */
 						CLEARBIT(ms->touch[i].flags, GS_TAP);
 						gs->tap_touching--;
 #ifdef DEBUG_GESTURES
@@ -365,14 +371,45 @@ static void tapping_update(struct Gestures* gs,
 		}
 	}
 
-	if ((gs->tap_touching == 0 && gs->tap_released > 0) || gs->tap_released >= released_max) {
-		n = tap_buttonnr(cfg, gs->tap_released) -1;
+	if ((gs->tap_touching != 1) && gs->absbtn0) {
+#ifdef DEBUG_GESTURES
+		xf86Msg(X_INFO, "tapping_update: absbtn0 up\n");
+#endif
+		/* stop button gestures */
+		gs->tap_released = 0;
+		/* mark button up */
+		timerclear(&gs->tap_time_down);
+		trigger_button_up(gs, 0);
+		gs->absbtn0 = 0;
+	}
+	timeraddms(&gs->tap_time_down, cfg->tap_timeout/2, &tv_tmp2);
+	if (cfg->absolute_mode && (gs->tap_touching == 1) && !saved_nfingers) {
+		/* emulate button events */
+		n = tap_buttonnr(cfg, gs->tap_touching) -1;
+		if (n == 0) {
+#ifdef DEBUG_GESTURES
+			xf86Msg(X_INFO, "tapping_update: absbtn0 down\n");
+#endif
+			trigger_button_down(gs, 0);
+			//trigger_drag_ready(gs, cfg);
+			timerclear(&gs->tap_time_down);
+			gs->absbtn0 = 1;
+		}
+	}
 
+	/* resume normal tap processing */
+	if ((gs->tap_touching == 0 && gs->tap_released > 0) || gs->tap_released >= released_max) {
 		foreach_bit(i, ms->touch_used) {
 			if (GETBIT(ms->touch[i].flags, GS_TAP))
 				CLEARBIT(ms->touch[i].flags, GS_TAP);
 		}
+		n = tap_buttonnr(cfg, gs->tap_released) -1;
+		if (gs->absbtn0 && (n == 0))
+			/* don't tap left button in absolute mode */
+			return;
+
 		trigger_button_click(gs, n, &tv_tmp);
+		/* TODO: disable ?? */
 		if (cfg->drag_enable && n == 0)
 			trigger_drag_ready(gs, cfg);
 
@@ -652,7 +689,8 @@ static void moving_update(struct Gestures* gs,
 	foreach_bit(i, ms->touch_used) {
 		if (GETBIT(ms->touch[i].state, MT_INVALID))
 			continue;
-		else if (GETBIT(ms->touch[i].flags, GS_BUTTON)) {
+		else if ((!gs->absbtn0 && GETBIT(ms->touch[i].flags, GS_BUTTON)) ||
+				(gs->absbtn0 && GETBIT(ms->touch[i].flags, GS_TAP))) {
 			btn_count++;
 			dx += ms->touch[i].dx;
 			dy += ms->touch[i].dy;

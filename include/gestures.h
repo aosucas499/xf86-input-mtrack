@@ -62,6 +62,7 @@ struct Gestures {
 
 	/* Internal state tracking. Not for direct access.
 	 */
+	int absbtn0;
 	int button_emulate;
 	int button_delayed;
 	struct timeval button_delayed_time;
