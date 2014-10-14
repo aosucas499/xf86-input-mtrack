@@ -52,12 +52,12 @@ typedef unsigned int bitmask_t;
 #define CLEARBIT(m, x) (m &= ~BITMASK(x))
 #define MODBIT(m, x, b) ((b) ? SETBIT(m, x) : CLEARBIT(m, x))
 
-#define ABSVAL(x) ((x) < 0 ? -1*(x) : (x))
+#define ABSVAL(x) fabs(x)
 #define MINVAL(x, y) ((x) < (y) ? (x) : (y)) 
 #define MAXVAL(x, y) ((x) > (y) ? (x) : (y))
-#define MODVAL(x, y) ((x) - ((int)((x) / (y))) * (y))
+#define MODVAL(x, y) (fmod((x)+(y), (y)))
 #define SQRVAL(x) ((x) * (x))
-#define CLAMPVAL(x, min, max) MAXVAL(MINVAL(x, max), min)
+#define CLAMPVAL(x, min, max) (((x) < (min)) ? (min) : (((x) > (max)) ? (max) : (x)))
 
 /* Retrieve the current time and place it in tv.
  */
