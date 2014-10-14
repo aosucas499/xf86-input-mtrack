@@ -179,6 +179,17 @@ static void touch_update(struct MTState* ms,
 	CLEARBIT(ms->touch[touch].state, MT_NEW);
 }
 
+/* Consume finger movements */
+void mtstate_consume_move(struct MTState *ms)
+{
+	int j;
+
+	for (j = 0; j < sizeof(ms->touch)/sizeof(ms->touch[0]); ++j) {
+		ms->touch[j].prev_x = ms->touch[j].x;
+		ms->touch[j].prev_y = ms->touch[j].y;
+	}
+}
+
 /* Release a touch.
  */
 static void touch_release(struct MTState* ms,

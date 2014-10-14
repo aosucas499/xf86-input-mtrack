@@ -454,7 +454,7 @@ static void trigger_move(struct Gestures* gs,
 	}
 }
 
-static void trigger_swipe(struct Gestures* gs,
+static int trigger_swipe(struct Gestures* gs,
 			const struct MConfig* cfg,
 			double dist, int dir, int nfingers)
 {
@@ -497,7 +497,7 @@ static void trigger_swipe(struct Gestures* gs,
 			break;
 		default:
 			/* ??? */
-			return;
+			return 0;
 		}
 		if (local_swipe_dist && gs->swipe_dist >= local_swipe_dist) {
 			timeraddms(&gs->time, cfg->gesture_wait, &gs->move_wait);
@@ -509,11 +509,13 @@ static void trigger_swipe(struct Gestures* gs,
 #ifdef DEBUG_GESTURES
 			xf86Msg(X_INFO, "trigger_swipe%u: swiping %+f in direction %d (at %d of %d)\n", nfingers, dist, dir, gs->move_dist, cfg->swipe_dist);
 #endif
+			return 1;
 		}
 	}
+	return 0;
 }
 
-static void trigger_scale(struct Gestures* gs,
+static int trigger_scale(struct Gestures* gs,
 			const struct MConfig* cfg,
 			double dist, int dir)
 {
@@ -541,10 +543,12 @@ static void trigger_scale(struct Gestures* gs,
 		xf86Msg(X_INFO, "trigger_scale: scaling %+f in direction %d (at %d of %d) (speed %f)\n",
 			dist, dir, gs->scale_dist, cfg->scale_dist, gs->move_speed);
 #endif
+			return 1;
 	}
+	return 0;
 }
 
-static void trigger_rotate(struct Gestures* gs,
+static int trigger_rotate(struct Gestures* gs,
 			const struct MConfig* cfg,
 			double dist, int dir)
 {
@@ -572,7 +576,9 @@ static void trigger_rotate(struct Gestures* gs,
 		xf86Msg(X_INFO, "trigger_rotate: rotating %+f in direction %d (at %d of %d) (speed %f)\n",
 			dist, dir, gs->rotate_dist, cfg->rotate_dist, gs->move_speed);
 #endif
+		return 1;
 	}
+	return 0;
 }
 
 static void trigger_reset(struct Gestures* gs)
@@ -664,11 +670,13 @@ static void moving_update(struct Gestures* gs,
 			trigger_move(gs, cfg, dx, dy);
 		else if (btn_count < 1)
 			trigger_reset(gs);
+		mtstate_consume_move(ms);
 	}
 	else if (count == 1 && cfg->trackpad_disable < 2) {
 		dx += touches[0]->dx;
 		dy += touches[0]->dy;
 		trigger_move(gs, cfg, dx, dy);
+		mtstate_consume_move(ms);
 	}
 	else if (count == 2 && cfg->trackpad_disable < 1) {
 		double aprev, anow;
@@ -693,20 +701,25 @@ static void moving_update(struct Gestures* gs,
 
 		/* swipe */
 		dir = get_swipe_dir(touches, count);
-		trigger_swipe(gs, cfg, travel, dir, count);
+		if (trigger_swipe(gs, cfg, travel, dir, count))
+			mtstate_consume_move(ms);
 		/* rotate */
 		dir = (radcmp(aprev, anow) < 0) ? TR_DIR_LT : TR_DIR_RT;
-		trigger_rotate(gs, cfg, radial, dir);
+		if (trigger_rotate(gs, cfg, radial, dir))
+			mtstate_consume_move(ms);
 		/* scale */
 		dir = (dnow < dprev) ? TR_DIR_DN : TR_DIR_UP;
-		trigger_scale(gs, cfg, axial, dir);
+		if (trigger_scale(gs, cfg, axial, dir))
+			mtstate_consume_move(ms);
 	}
 	else if (count == 3 && cfg->trackpad_disable < 1) {
 		if ((dir = get_swipe_dir(touches, count)) != TR_NONE) {
 			dist = hypot(
 				touches[0]->dx + touches[1]->dx + touches[2]->dx,
 				touches[0]->dy + touches[1]->dy + touches[2]->dy);
-			trigger_swipe(gs, cfg, dist/count, dir, count);
+			if (trigger_swipe(gs, cfg, dist/count, dir, count))
+				mtstate_consume_move(ms);
+
 		}
 	}
 	else if (count == 4 && cfg->trackpad_disable < 1) {
@@ -714,7 +727,8 @@ static void moving_update(struct Gestures* gs,
 			dist = hypot(
 				touches[0]->dx + touches[1]->dx + touches[2]->dx + touches[3]->dx,
 				touches[0]->dy + touches[1]->dy + touches[2]->dy + touches[3]->dy);
-			trigger_swipe(gs, cfg, dist/count, dir, count);
+			if (trigger_swipe(gs, cfg, dist/count, dir, count))
+				mtstate_consume_move(ms);
 		}
 	}
 }

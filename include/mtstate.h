@@ -62,5 +62,7 @@ void mtstate_extract(struct MTState* ms,
 			const struct HWState* hs,
 			const struct Capabilities* caps);
 
+void mtstate_consume_move(struct MTState *);
+
 #endif
 
