@@ -184,7 +184,7 @@ void mprops_init(struct MConfig* cfg, InputInfoPtr local) {
 
 	ivals[0] = cfg->rotate_lt_btn;
 	ivals[1] = cfg->rotate_rt_btn;
-	mprops.rotate_buttons = atom_init_integer(local->dev, MTRACK_PROP_SCALE_BUTTONS, 2, ivals, 8);
+	mprops.rotate_buttons = atom_init_integer(local->dev, MTRACK_PROP_ROTATE_BUTTONS, 2, ivals, 8);
 
 	ivals[0] = cfg->drag_enable;
 	ivals[1] = cfg->drag_timeout;
