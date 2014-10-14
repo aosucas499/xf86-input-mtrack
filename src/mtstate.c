@@ -21,7 +21,6 @@
  **************************************************************************/
 
 #include "mtstate.h"
-#include "trig.h"
 
 static int inline percentage(int dividend, int divisor)
 {

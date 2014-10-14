@@ -27,9 +27,14 @@
 
 #include "gestures.h"
 #include "mtouch.h"
-#include "trig.h"
 
 #define IS_VALID_BUTTON(x) (x >= 0 && x <= 31)
+
+#define TR_NONE 0
+#define TR_DIR_UP 1
+#define TR_DIR_RT 2
+#define TR_DIR_DN 3
+#define TR_DIR_LT 4
 
 static void trigger_button_up(struct Gestures* gs, int button)
 {
@@ -453,7 +458,7 @@ static void trigger_swipe(struct Gestures* gs,
 			const struct MConfig* cfg,
 			double dist, int dir, int nfingers)
 {
-	int local_swipe_dist, btn[8] = {};
+	int local_swipe_dist, btn[5] = {};
 
 	if (gs->move_type == GS_SWIPE || !timercmp(&gs->time, &gs->move_wait, <)) {
 		struct timeval tv_tmp;

@@ -4,8 +4,7 @@ SOURCES_COMMON = \
 	$(srcdir)/src/hwstate.c \
 	$(srcdir)/src/mconfig.c \
 	$(srcdir)/src/mtouch.c \
-	$(srcdir)/src/mtstate.c \
-	$(srcdir)/src/trig.c
+	$(srcdir)/src/mtstate.c
 
 @DRIVER_NAME@_drv_la_LTLIBRARIES = @DRIVER_NAME@_drv.la
 @DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version
