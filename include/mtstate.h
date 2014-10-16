@@ -38,7 +38,6 @@
 struct Touch {
 	bitmask_t state;
 	bitmask_t flags;
-	double direction;
 	int tracking_id;
 	int x, y, dx, dy;
 	int prev_x, prev_y;

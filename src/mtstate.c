@@ -143,7 +143,6 @@ static int touch_append(struct MTState* ms,
 		ms->touch[n].state = 0U;
 		ms->touch[n].flags = 0U;
 		timercp(&ms->touch[n].down, &hs->evtime);
-		ms->touch[n].direction = TR_NONE;
 		ms->touch[n].tracking_id = fs->tracking_id;
 		ms->touch[n].prev_x = x;
 		ms->touch[n].prev_y = y;
@@ -178,7 +177,6 @@ static void touch_update(struct MTState* ms,
 	ms->touch[touch].total_dy += ms->touch[touch].dy;
 	ms->touch[touch].x = x;
 	ms->touch[touch].y = y;
-	ms->touch[touch].direction = trig_direction(ms->touch[touch].dx, ms->touch[touch].dy);
 	CLEARBIT(ms->touch[touch].state, MT_NEW);
 }
 
@@ -189,7 +187,6 @@ static void touch_release(struct MTState* ms,
 {
 	ms->touch[touch].dx = 0;
 	ms->touch[touch].dy = 0;
-	ms->touch[touch].direction = TR_NONE;
 	CLEARBIT(ms->touch[touch].state, MT_NEW);
 	SETBIT(ms->touch[touch].state, MT_RELEASED);
 }
@@ -290,25 +287,25 @@ static void mtstate_output(const struct MTState* ms,
 	foreach_bit(i, ms->touch_used) {
 		if (GETBIT(ms->touch[i].state, MT_RELEASED)) {
 			timersub(&hs->evtime, &ms->touch[i].down, &tv);
-			xf86Msg(X_INFO, "  released p(%d, %d) d(%+d, %+d) dir(%f) down(%llu) time(%lld)\n",
+			xf86Msg(X_INFO, "  released p(%d, %d) d(%+d, %+d) down(%llu) time(%lld)\n",
 						ms->touch[i].x, ms->touch[i].y, ms->touch[i].dx, ms->touch[i].dy,
-						ms->touch[i].direction, timertoms(&ms->touch[i].down), timertoms(&tv));
+						timertoms(&ms->touch[i].down), timertoms(&tv));
 		}
 		else if (GETBIT(ms->touch[i].state, MT_NEW)) {
-			xf86Msg(X_INFO, "  new      p(%d, %d) d(%+d, %+d) dir(%f) down(%llu)\n",
+			xf86Msg(X_INFO, "  new      p(%d, %d) d(%+d, %+d) down(%llu)\n",
 						ms->touch[i].x, ms->touch[i].y, ms->touch[i].dx, ms->touch[i].dy,
-						ms->touch[i].direction, timertoms(&ms->touch[i].down));
+						timertoms(&ms->touch[i].down));
 		}
 		else if (GETBIT(ms->touch[i].state, MT_INVALID)) {
 			timersub(&hs->evtime, &ms->touch[i].down, &tv);
-			xf86Msg(X_INFO, "  invalid  p(%d, %d) d(%+d, %+d) dir(%f) down(%llu) time(%lld)\n",
+			xf86Msg(X_INFO, "  invalid  p(%d, %d) d(%+d, %+d) down(%llu) time(%lld)\n",
 						ms->touch[i].x, ms->touch[i].y, ms->touch[i].dx, ms->touch[i].dy,
-						ms->touch[i].direction, timertoms(&ms->touch[i].down), timertoms(&tv));
+						timertoms(&ms->touch[i].down), timertoms(&tv));
 		}
 		else {
-			xf86Msg(X_INFO, "  touching p(%d, %d) d(%+d, %+d) dir(%f) down(%llu)\n",
+			xf86Msg(X_INFO, "  touching p(%d, %d) d(%+d, %+d) down(%llu)\n",
 						ms->touch[i].x, ms->touch[i].y, ms->touch[i].dx, ms->touch[i].dy,
-						ms->touch[i].direction, timertoms(&ms->touch[i].down));
+						timertoms(&ms->touch[i].down));
 		}
 	}
 }
