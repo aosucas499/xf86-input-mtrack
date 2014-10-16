@@ -587,34 +587,6 @@ static void trigger_reset(struct Gestures* gs)
 	timerclear(&gs->move_wait);
 }
 
-static int get_rotate_dir(const struct Touch* t1,
-			const struct Touch* t2)
-{
-	double v, d1, d2;
-	v = trig_direction(t2->x - t1->x, t2->y - t1->y);
-	d1 = trig_angles_add(v, 2);
-	d2 = trig_angles_sub(v, 2);
-	if (trig_angles_acute(t1->direction, d1) < 2 && trig_angles_acute(t2->direction, d2) < 2)
-		return TR_DIR_RT;
-	else if (trig_angles_acute(t1->direction, d2) < 2 && trig_angles_acute(t2->direction, d1) < 2)
-		return TR_DIR_LT;
-	return TR_NONE;
-}
-
-static int get_scale_dir(const struct Touch* t1,
-			const struct Touch* t2)
-{
-	double v;
-	if (trig_angles_acute(t1->direction, t2->direction) >= 2) {
-		v = trig_direction(t2->x - t1->x, t2->y - t1->y);
-		if (trig_angles_acute(v, t1->direction) < 2)
-			return TR_DIR_DN;
-		else
-			return TR_DIR_UP;
-	}
-	return TR_NONE;
-}
-
 static int get_swipe_dir(struct Touch *const *list, int n)
 {
 	double angle;
@@ -635,6 +607,19 @@ static int get_swipe_dir(struct Touch *const *list, int n)
 	else if (fabs(sin(angle)) < 0.5)
 		return (fabs(angle) < M_PI_2) ? TR_DIR_RT : TR_DIR_LT;
 	return TR_NONE;
+}
+
+static int radcmp(double rad1, double rad2)
+{
+	double diff;
+
+	diff = MODVAL(rad1 - rad2 + (2 * M_PI), 2*M_PI);
+	if (0 == diff)
+		return 0;
+	else if (diff < M_PI)
+		return 1;
+	else
+		return -1;
 }
 
 static void moving_update(struct Gestures* gs,
@@ -681,23 +666,35 @@ static void moving_update(struct Gestures* gs,
 		trigger_move(gs, cfg, dx, dy);
 	}
 	else if (count == 2 && cfg->trackpad_disable < 1) {
-		// scroll, scale, or rotate
-		if ((dir = get_swipe_dir(touches, count)) != TR_NONE) {
-			dist = hypot(
-				touches[0]->dx + touches[1]->dx,
-				touches[0]->dy + touches[1]->dy);
-			trigger_swipe(gs, cfg, dist/count, dir, count);
-		}
-		if ((dir = get_rotate_dir(touches[0], touches[1])) != TR_NONE) {
-			dist = ABSVAL(hypot(touches[0]->dx, touches[0]->dy)) +
-				ABSVAL(hypot(touches[1]->dx, touches[1]->dy));
-			trigger_rotate(gs, cfg, dist/2, dir);
-		}
-		if ((dir = get_scale_dir(touches[0], touches[1])) != TR_NONE) {
-			dist = ABSVAL(hypot(touches[0]->dx, touches[0]->dy)) +
-				ABSVAL(hypot(touches[1]->dx, touches[1]->dy));
-			trigger_scale(gs, cfg, dist/2, dir);
-		}
+		double aprev, anow;
+		double dprev, dnow;
+		double travel, axial, radial;
+
+		/* scroll, scale, or rotate.
+		 * Which one to choose depends on their relative position
+		 * (angle) and distance
+		 * Try all 3 gestures in parallel, and when 1 gesture triggers a
+		 * button, it cleans the collected movement of all fingers.
+		 */
+		aprev = atan2(-(touches[1]->prev_y - touches[0]->prev_y), touches[1]->prev_x - touches[0]->prev_x);
+		anow = atan2(-(touches[1]->y - touches[0]->y), touches[1]->x - touches[0]->x);
+		dprev = hypot(touches[1]->prev_x - touches[0]->prev_x, touches[1]->prev_y - touches[0]->prev_y);
+		dnow = hypot(touches[1]->x - touches[0]->x, touches[1]->y - touches[0]->y);
+
+		travel = hypot(touches[0]->x + touches[1]->x - touches[0]->prev_x - touches[1]->prev_x,
+				touches[0]->y + touches[1]->y - touches[0]->prev_y - touches[1]->prev_y) / 2;
+		axial = fabs(dprev - dnow);
+		radial = fabs(sin(aprev - anow) * (dprev + dnow)/2) /2;
+
+		/* swipe */
+		dir = get_swipe_dir(touches, count);
+		trigger_swipe(gs, cfg, travel, dir, count);
+		/* rotate */
+		dir = (radcmp(aprev, anow) < 0) ? TR_DIR_LT : TR_DIR_RT;
+		trigger_rotate(gs, cfg, radial, dir);
+		/* scale */
+		dir = (dnow < dprev) ? TR_DIR_DN : TR_DIR_UP;
+		trigger_scale(gs, cfg, axial, dir);
 	}
 	else if (count == 3 && cfg->trackpad_disable < 1) {
 		if ((dir = get_swipe_dir(touches, count)) != TR_NONE) {

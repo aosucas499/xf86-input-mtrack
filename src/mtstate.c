@@ -145,6 +145,8 @@ static int touch_append(struct MTState* ms,
 		timercp(&ms->touch[n].down, &hs->evtime);
 		ms->touch[n].direction = TR_NONE;
 		ms->touch[n].tracking_id = fs->tracking_id;
+		ms->touch[n].prev_x = x;
+		ms->touch[n].prev_y = y;
 		ms->touch[n].x = x;
 		ms->touch[n].y = y;
 		ms->touch[n].dx = 0;
@@ -170,6 +172,8 @@ static void touch_update(struct MTState* ms,
 	y = cfg->axis_y_invert ? get_cap_yflip(caps, fs->position_y) : fs->position_y;
 	ms->touch[touch].dx = x - ms->touch[touch].x;
 	ms->touch[touch].dy = y - ms->touch[touch].y;
+	ms->touch[touch].prev_x = ms->touch[touch].x;
+	ms->touch[touch].prev_y = ms->touch[touch].y;
 	ms->touch[touch].total_dx += ms->touch[touch].dx;
 	ms->touch[touch].total_dy += ms->touch[touch].dy;
 	ms->touch[touch].x = x;
