@@ -40,6 +40,10 @@ The following is a minimal working InputClass section for xorg.conf:
 Configuration options may be defined inside the InputClass section to configure
 the driver. Available options and their defaults are as follows.
 
+**Absolute** -
+Operate in absolute mode. This is advised for touchscreens
+Default is off.
+
 **TrackpadDisable** -
 Disables trackpad touch input. A value of 0 will enable the trackpad. A value
 of 1 will disable tapping and gestures but not movement. A value of 2 will
@@ -149,6 +153,13 @@ disables three-finger tapping. Defaults to 2.
 **TapButton4** - 
 Which button to emulate for four-finger tapping. Integer value. A value of 0
 disables three-finger tapping. Defaults to 0.
+
+**SingleFinger** -
+Workaround for tapping.
+When enabled, a single finger will touch will result in a button1 down.
+Button1 is released whenever the finger is released, or additional fingers touch.
+In the latter case, the gesture detection starts.
+Default is off.
 
 **ClickTime** - 
 When tapping, how much time to hold down the emulated button. Integer value
