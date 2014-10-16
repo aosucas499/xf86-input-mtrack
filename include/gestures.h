@@ -75,6 +75,7 @@ struct Gestures {
 	int move_type;
 	int move_dist;
 	int move_dir;
+	int swipe_cnt;
 	int move_drag;
 	int move_drag_dx;
 	int move_drag_dy;
