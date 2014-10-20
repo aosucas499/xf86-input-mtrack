@@ -704,7 +704,7 @@ static void moving_update(struct Gestures* gs,
 		if (trigger_swipe(gs, cfg, travel, dir, count))
 			mtstate_consume_move(ms);
 		/* rotate */
-		dir = (radcmp(aprev, anow) < 0) ? TR_DIR_LT : TR_DIR_RT;
+		dir = (radcmp(aprev, anow) > 0) ? TR_DIR_LT : TR_DIR_RT;
 		if (trigger_rotate(gs, cfg, radial, dir))
 			mtstate_consume_move(ms);
 		/* scale */
